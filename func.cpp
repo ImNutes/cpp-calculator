@@ -99,16 +99,16 @@ mpf_class Func::mpf_tan(mpf_class t) {
 
 //from https://stackoverflow.com/a/42542593
 mpf_class Func::mpf_atan(mpf_class t) {
-  if(t < 1) {
-    std::function<mpf_class(int)> fn = [=](int n) {
-      mpf_class numerator = pow(-1, n);
-      mpf_class denominator = (2 * n + 1);
-      mpf_class res = pow(t, (2 * n + 1));
-      res *= (numerator / denominator);
-      return res;
-    };
-    return summation(fn, ACCURACY * 2);
-  }
+  mpf_class x = t > 1 ? 1/t : t;
+  std::function<mpf_class(int)> fn = [=](int n) {
+    mpf_class numerator = pow(-1, n);
+    mpf_class denominator = (2 * n + 1);
+    mpf_class res = pow(t, (2 * n + 1));
+    res *= (numerator / denominator);
+    return res;
+  };
+  if( t > 1 ) return pi/2 - summation(fn, ACCURACY * 2); 
+  return summation(fn, ACCURACY * 2);
   //taylor series requires a shit ton of terms to accurately approximate this, im too lazy to do that
   if(t == 1)
     return pi/4;
@@ -116,6 +116,7 @@ mpf_class Func::mpf_atan(mpf_class t) {
 }
 
 mpf_class Func::mpf_asin(mpf_class t) {
+  
   return mpf_atan(t / (sqrt(1 - pow(t, 2))));
   // std::function<mpf_class(int)> fn = [=](int n) {
   //   mpf_class numerator = mpz_fac(2 * n);
