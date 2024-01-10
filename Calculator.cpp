@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <iostream>
 #include <numbers>
 Calculator::Calculator() {}
 Calculator::Calculator(std::string s) { parse(s); }
@@ -44,7 +43,6 @@ mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) noexcept {
 
 mpf_class Calculator::operate(mpf_class x, std::string str) noexcept {
   str = str.substr(3, str.length() - 1);
-  std::cout << "function: " << str << "\n";
   if (str == "sin")
     return Func::mpf_sin(x);
   if (str == "cos")
@@ -63,7 +61,7 @@ mpf_class Calculator::convertVariable(std::string str) noexcept {
 mpf_class Calculator::evaluate() {
   if (!stack.empty())
     throw "stack is not clear";
-  if(values.empty()) return NULL;
+  if(values.empty()) return 0;
   std::vector<mpf_class> tmp;
   int j = 0;
   for (std::string i : queue) {
@@ -78,9 +76,6 @@ mpf_class Calculator::evaluate() {
       if (i.length() == 1) {
         if (tmp.size() < 2)
           break;
-        for (auto h : tmp)
-          std::cout << h << " ";
-        std::cout << "operating go brr\n";
         mpf_class x, y;
         y = popLast();
         x = popLast();
@@ -88,7 +83,6 @@ mpf_class Calculator::evaluate() {
       } else if (i.substr(0, 1) == "f") {
         char params = i[1];
         i = i.substr(3, i.length() - 1);
-        auto start = std::chrono::high_resolution_clock::now();
         switch(params) {
           case '1':
             if(tmp.size() < 1) throw "not enough params";
@@ -100,12 +94,6 @@ mpf_class Calculator::evaluate() {
             tmp.push_back(functions2[i](x, popLast()));
             break;
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout << "function took "
-                  << std::chrono::duration_cast<std::chrono::microseconds>(
-                         end - start)
-                         .count()
-                  << " micros\n";
       } else if (i.substr(0, 1) == "v") {
         tmp.push_back(convertVariable(i));
       }
@@ -127,7 +115,6 @@ void Calculator::parse(std::string s) {
   auto pushTmp = [&]() {
     if (tmp.front() == '.')
       tmp = '0' + tmp;
-    std::cout << "parsed " << tmp << "\n";
     push_back(tmp);
     tmp.clear();
   };
@@ -165,7 +152,6 @@ void Calculator::parse(std::string s) {
         if(seekNPush(this->vars, "v_")) continue;
       }
       if (!isspace(s[i])) {
-        std::cout << "pushing: \'" << s[i] << "\'\n";
         push_back(std::string() + s[i]);
       }
     }
@@ -238,7 +224,6 @@ void Calculator::push_back(std::string c) {
     if (lastType == DIGIT)
       push_back("`");
     std::string str = c.substr(2);
-    std::cout << str << "\n";
     switch(c[0]) {
       case 'f':
         stack.push_back(c);
@@ -263,7 +248,6 @@ void Calculator::push(std::vector<std::string> &stacc) {
     if (stacc.back() == "(")
       return;
     if (!isspace(stacc.back()[0])) {
-      std::cout << "emplacing onto queue: \'" << stacc.back() << "\'\n";
       queue.push_back(stacc.back());
     }
     stacc.pop_back();
