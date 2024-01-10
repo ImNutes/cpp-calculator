@@ -49,11 +49,11 @@ private:
   std::map<std::string, std::function<mpf_class(mpf_class)> > functions = {
           {"sin", Func::mpf_sin}, {"cos", Func::mpf_cos}, {"tan", Func::mpf_tan}, 
 {"asin", Func::mpf_asin}, {"acos", Func::mpf_acos}, {"atan", Func::mpf_atan},
-{"ln", Func::mpf_ln}, {"abs", Func::abs}, {"sqrt", Func::sqrt}
+{"abs", Func::abs}, {"sqrt", Func::sqrt}
   };
 
   std::map<std::string, std::function<mpf_class(mpf_class, mpf_class)> > functions2 = {
-    {"pow", Func::mpf_pow}
+    {"pow", Func::mpf_pow}, {"atan2", Func::mpf_atan2}
   };
   //variables
   const std::map<std::string, mpf_class> const_variables = {

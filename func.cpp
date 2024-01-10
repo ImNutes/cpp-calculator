@@ -99,7 +99,9 @@ mpf_class Func::mpf_tan(mpf_class t) {
 
 //from https://stackoverflow.com/a/42542593
 mpf_class Func::mpf_atan(mpf_class t) {
-  mpf_class x = t > 1 ? 1/t : t;
+  if(t > 1) return pi/2 - mpf_atan(1/t);
+  //this is cheating
+  if(t == 1) return pi/4;
   std::function<mpf_class(int)> fn = [=](int n) {
     mpf_class numerator = pow(-1, n);
     mpf_class denominator = (2 * n + 1);
@@ -107,17 +109,12 @@ mpf_class Func::mpf_atan(mpf_class t) {
     res *= (numerator / denominator);
     return res;
   };
-  if( t > 1 ) return pi/2 - summation(fn, ACCURACY * 2); 
   return summation(fn, ACCURACY * 2);
-  //taylor series requires a shit ton of terms to accurately approximate this, im too lazy to do that
-  if(t == 1)
-    return pi/4;
-  throw "L";
 }
 
 mpf_class Func::mpf_asin(mpf_class t) {
   
-  return mpf_atan(t / (sqrt(1 - pow(t, 2))));
+  return mpf_atan2(t, sqrt(1 - pow(t,2)));
   // std::function<mpf_class(int)> fn = [=](int n) {
   //   mpf_class numerator = mpz_fac(2 * n);
   //   mpf_class denominator = pow(4, n) * pow(mpz_fac(n), 2) * (2 * n + 1);
@@ -137,13 +134,3 @@ mpf_class Func::mpf_atan2(mpf_class y, mpf_class x) {
 }
 
 //end of trig functions
-mpf_class Func::mpf_ln(mpf_class t) {
-  t = 1 + t;
-  std::function<mpf_class(int)> fn = [=](int n) {
-    mpf_class numerator = pow(t, n);
-    mpf_class res;
-    res = -(numerator / n);
-    return res;
-  };
-  return summation(fn, ACCURACY, 1);
-}

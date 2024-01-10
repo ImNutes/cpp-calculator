@@ -39,13 +39,10 @@ namespace Func {
   mpf_class mpf_sin(mpf_class t);
   mpf_class mpf_cos(mpf_class t);
   mpf_class mpf_tan(mpf_class t);
-  //these guys kind of suck
+  //these guys kind of suck, ranked in order of sucking from least to greatest
   mpf_class mpf_atan(mpf_class t);
+  mpf_class mpf_atan2(mpf_class y, mpf_class x);
   mpf_class mpf_asin(mpf_class t);
   mpf_class mpf_acos(mpf_class t);
-  mpf_class mpf_atan2(mpf_class y, mpf_class x);
-
-  //this guy really sucks
-  mpf_class mpf_ln(mpf_class t);
 }
 #endif
