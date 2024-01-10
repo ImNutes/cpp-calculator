@@ -53,7 +53,7 @@ private:
   };
 
   std::map<std::string, std::function<mpf_class(mpf_class, mpf_class)> > functions2 = {
-    {"plus", [](mpf_class x, mpf_class y) { return x + y; }}, {"pow", Func::mpf_pow}
+    {"pow", Func::mpf_pow}
   };
   //variables
   const std::map<std::string, mpf_class> const_variables = {
