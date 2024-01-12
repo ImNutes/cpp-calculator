@@ -142,8 +142,9 @@ void Calculator::parse(std::string s) {
           }
           return false;
         };
-        while (isalpha(s[i])) { // eat up alpha characters
+        while (isalpha(s[i]) || isdigit(s[i])) { // eat up alpha characters
           str += s[i++];
+          std::cout << str << "\n";
         }
         --i;
         if(seekNPush(this->functions, "f1_")) continue;
