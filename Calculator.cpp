@@ -91,7 +91,7 @@ mpf_class Calculator::evaluate() {
           case '2':
             if(tmp.size() < 2) throw "not enough params";
             mpf_class x = popLast();
-            tmp.push_back(functions2[i](x, popLast()));
+            tmp.push_back(functions2[i](popLast(), x));
             break;
         }
       } else if (i.substr(0, 1) == "v") {
