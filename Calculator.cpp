@@ -1,7 +1,6 @@
 #include "Calculator.hpp"
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <numbers>
 Calculator::Calculator() {}
@@ -142,10 +141,9 @@ void Calculator::parse(std::string s) {
           }
           return false;
         };
-        while (isalpha(s[i]) || isdigit(s[i])) { // eat up alpha characters
+        while (isalpha(s[i]) || isdigit(s[i])) // eat up alpha characters
           str += s[i++];
-          std::cout << str << "\n";
-        }
+       
         --i;
         if(seekNPush(this->functions, "f1_")) continue;
         if(seekNPush(this->functions2, "f2_")) continue;

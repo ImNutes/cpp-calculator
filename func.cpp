@@ -4,7 +4,6 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
-#include <iostream>
 mpf_class Func::summation(std::function<mpf_class(int)> fn, int x, int y) {
   mpf_class sum = 0;
   for (int i = y; i < x + y; ++i)
