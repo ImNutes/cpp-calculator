@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     if(input == "exit" || input[0] == 'q') break;
     calculator.parse(input);
     std::cout << "RPN: " << calculator.getRPN() << "\n";
-    std::cout << calculator.evaluate() << "\n";
+    std::cout <<  std::setprecision(10) << calculator.evaluate() << "\n";
     std::cout << "enter equation"
               << "\n";
     input = myread(prompt);
