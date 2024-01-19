@@ -1,6 +1,17 @@
-#include "Calculator.hpp"
 #include <iostream>
 #include <iomanip>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include "Calculator.hpp"
+const std::string prompt = "~> ";
+std::string myread(const std::string &prompt = ::prompt) {
+  char * line = readline(prompt.c_str());
+  std::string res = line;
+  if(line && *line)
+    add_history(line);
+  free(line);
+  return res;
+}
 int main(int argc, char *argv[]) {
   mpf_set_default_prec(64);
   std::string input;
@@ -9,19 +20,21 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << "enter equation"
               << "\n";
-    std::getline(std::cin, input);
+    input = myread(prompt);
   }
   Calculator calculator;
-  while(input != "exit" || input != "q") {
+  try {
+  while(true) {
+    if(input == "exit" || input[0] == 'q') break;
     calculator.parse(input);
     std::cout << "RPN: " << calculator.getRPN() << "\n";
-    try {
-      std::cout << std::setprecision(10) << calculator.evaluate()<< "\n";
-    } catch (const char *message) {
-      std::cout << message;
-    }
-    std::cout << "Enter equation" << "\n";
-    std::getline(std::cin, input);
+    std::cout << calculator.evaluate() << "\n";
+    std::cout << "enter equation"
+              << "\n";
+    input = myread(prompt);
+  }
+  } catch(char const* msg) {
+    std::cout << msg << "\n";
   }
   return 0;
 }

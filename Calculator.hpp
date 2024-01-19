@@ -1,7 +1,6 @@
 #pragma once
 #ifndef CALCULATOR_HPP
 #define CALCULATOR_HPP
-#define _GLIBCXX_USE_CXX11_ABI 0
 #include <array>
 #include <gmpxx.h>
 #include <functional>
@@ -12,7 +11,7 @@
 #include <cmath>
 #include "func.hpp"
 class Calculator {
-  enum equation_type { OPERATOR, DIGIT, PAREN_OPEN, PAREN_CLOSE, FUNCTION, VARIABLE, NO };
+enum equation_type { OPERATOR, DIGIT, PAREN_OPEN, PAREN_CLOSE, FUNCTION, VARIABLE, NO };
 
 public:
   Calculator();
