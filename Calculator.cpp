@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 Calculator::Calculator() {}
-Calculator::Calculator(std::string s) { parse(s); }
+Calculator::Calculator(std::string s) { Calculator(); parse(s); }
 constexpr int Calculator::getPrecedence(char c) noexcept {
   switch (c) {
   case '+':
@@ -269,4 +269,17 @@ std::string Calculator::getQueue() const {
     tmp += i + ' ';
   }
   return tmp;
+}
+std::vector<char *> Calculator::genVocab() {
+  //bad code to generate a vocab vector for autocompletion
+  std::vector<char *> vocab;
+  auto addToVocab = [&](auto a) {
+    for(auto &i : a)
+      vocab.push_back(strdup(i.first.c_str()));
+  };
+  addToVocab(functions);
+  addToVocab(functions2);
+  addToVocab(vars);
+  addToVocab(const_variables);
+  return vocab;
 }

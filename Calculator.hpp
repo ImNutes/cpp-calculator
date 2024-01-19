@@ -29,7 +29,7 @@ public:
   std::string getRPN() const;
   // parses a string. WILL CLEAR BOTH THE QUEUE AND THE STACK
   void parse(std::string s);
-
+  std::vector<char*> genVocab();
 private:
   mpf_class operate(mpf_class x, mpf_class y, char c) noexcept;
   mpf_class operate(mpf_class x, std::string str) noexcept;

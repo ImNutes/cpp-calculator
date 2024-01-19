@@ -112,7 +112,7 @@ mpf_class Func::mpf_atan(mpf_class t) {
 }
 
 mpf_class Func::mpf_asin(mpf_class t) {
-  
+  if(abs(t) > 1) throw "invalid input";
   return mpf_atan2(t, sqrt(1 - pow(t,2)));
   // std::function<mpf_class(int)> fn = [=](int n) {
   //   mpf_class numerator = mpz_fac(2 * n);
@@ -125,7 +125,7 @@ mpf_class Func::mpf_asin(mpf_class t) {
   // return summation(fn, ACCURACY * 2);
 }
 mpf_class Func::mpf_acos(mpf_class t) {
-  t = reduceRad(t);
+  if(abs(t) > 1) throw "invalid input";
   return (pi / 2) - mpf_asin(t);
 }
 mpf_class Func::mpf_atan2(mpf_class y, mpf_class x) {
