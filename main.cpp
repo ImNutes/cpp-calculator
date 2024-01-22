@@ -6,7 +6,7 @@
 #include "Calculator.hpp"
 
 const std::string prompt = "~> ";
-std::vector<char *> vocab;
+std::vector<std::string> vocab;
 //wraps readline and the history functions
 std::string myread(const std::string &prompt = ::prompt) {
   char * line = readline(prompt.c_str());
@@ -17,17 +17,27 @@ std::string myread(const std::string &prompt = ::prompt) {
   return res;
 }
 char* cmd_gen(const char * text, int state) {
-  static int list_index, len;
-  char *name = NULL;
+  static int len;
+  static unsigned long list_index;
+  //char *name = NULL;
   if(!state) {
-    list_index = 0;
     len = strlen(text);
+    list_index = 0;
   }
-  while((name = vocab[list_index])) {
-    list_index++;
+  while(list_index < vocab.size()) {
+    const char * name = vocab[list_index++].c_str();
     if(strncmp(name, text, len) == 0)
       return strdup(name);
   }
+  // while(list_index < vocab.size()) {
+  //   char * now = strdup(vocab[list_index].c_str());
+  //   if(strncmp(now, text, len) == 0) {
+  //     std::cout << "returned " << now << "\n";
+  //     return now;
+  //   }
+  //   free(now);
+  //   list_index++;
+  // }
   return (char*) NULL;
 }
 char ** completion(const char * text, int start, int end) {

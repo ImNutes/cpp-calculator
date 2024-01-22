@@ -270,12 +270,12 @@ std::string Calculator::getQueue() const {
   }
   return tmp;
 }
-std::vector<char *> Calculator::genVocab() {
+std::vector<std::string> Calculator::genVocab() {
   //bad code to generate a vocab vector for autocompletion
-  std::vector<char *> vocab;
+  std::vector<std::string> vocab;
   auto addToVocab = [&](auto a) {
     for(auto &i : a)
-      vocab.push_back(strdup(i.first.c_str()));
+      vocab.push_back((i.first));
   };
   addToVocab(functions);
   addToVocab(functions2);
