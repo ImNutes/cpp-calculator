@@ -9,50 +9,67 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <bitset>
 #include "func.hpp"
+enum flags {
+  DEGREES = 1 << 0
+};
 class Calculator {
 enum equation_type { OPERATOR, DIGIT, PAREN_OPEN, PAREN_CLOSE, FUNCTION, VARIABLE, NO };
-
 public:
+
+  //manages calculator settings as defined in flags variable
+  int m_settings;
+
   Calculator();
   Calculator(std::string s);
   void push_back(std::string c);
+  void push_back(char c);
   void push_back(mpf_class d);
   // pushes off everything that remains on the stack
   void push();
   void push(std::vector<std::string> &stacc);
-  // evaluates the RPN stored in queue
+
   mpf_class evaluate();
-  // returns the queue
+  void clear();
   std::string getQueue() const;
-  //returns the reverse polish notation version of the equation.
   std::string getRPN() const;
-  // parses a string. WILL CLEAR BOTH THE QUEUE AND THE STACK
+
+  //WILL CLEAR BOTH THE QUEUE AND THE STACK
   void parse(std::string s);
   std::vector<std::string> genVocab();
 private:
+
+  //manages state of push_back and parsing functions
+  equation_type lastType;
+  int in_paren{0};
+  
   mpf_class operate(mpf_class x, mpf_class y, char c) noexcept;
-  mpf_class operate(mpf_class x, std::string str) noexcept;
-  mpf_class convertVariable(std::string str) noexcept;
   constexpr int getPrecedence(char c) noexcept;
   std::string getStack() const;
-
-  // stores a representation of the rpn. %d represents an mpf_class value in the values vector.
   std::vector<std::string> queue;
-  //stores values as mpf_classes
   std::vector<mpf_class> values;
-  // temporarily stores operators
   std::vector<std::string> stack;
+  std::vector<std::string> parenStack;
 
-  // functions
+
+  //functions
+
+  //1 param
   std::map<std::string, std::function<mpf_class(mpf_class)> > functions = {
-          {"sin", Func::mpf_sin}, {"cos", Func::mpf_cos}, {"tan", Func::mpf_tan}, 
-{"asin", Func::mpf_asin}, {"acos", Func::mpf_acos}, {"atan", Func::mpf_atan},
-{"abs", Func::abs}, {"sqrt", Func::sqrt}
+    {"abs", Func::abs}, {"sqrt", Func::sqrt}
   };
 
+  //trig functions, must be aware of the flags setting (deg or rad)
+  std::map<std::string, std::function<mpf_class(mpf_class, bool)> >  trig_functions = {
+    {"sin", Func::mpf_sin}, {"cos", Func::mpf_cos}, {"tan", Func::mpf_tan},
+    {"asin", Func::mpf_asin}, {"acos", Func::mpf_acos}, {"atan", Func::mpf_atan}
+  };
+
+
+  //2 param
   std::map<std::string, std::function<mpf_class(mpf_class, mpf_class)> > functions2 = {
-    {"pow", Func::mpf_pow}, {"atan2", Func::mpf_atan2}
+    {"pow", Func::mpf_pow}
   };
   //variables
   const std::map<std::string, mpf_class> const_variables = {

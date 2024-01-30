@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 Calculator::Calculator() {}
-Calculator::Calculator(std::string s) { Calculator(); parse(s); }
+Calculator::Calculator(std::string s) { parse(s); }
 constexpr int Calculator::getPrecedence(char c) noexcept {
   switch (c) {
   case '+':
@@ -40,23 +40,6 @@ mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) noexcept {
   }
 }
 
-mpf_class Calculator::operate(mpf_class x, std::string str) noexcept {
-  str = str.substr(3, str.length() - 1);
-  if (str == "sin")
-    return Func::mpf_sin(x);
-  if (str == "cos")
-    return Func::mpf_cos(x);
-  if (str == "tan")
-    return Func::mpf_tan(x);
-  if (str == "asin")
-    return Func::mpf_asin(x);
-  return 0;
-}
-mpf_class Calculator::convertVariable(std::string str) noexcept {
-  if (str == "pi")
-    return M_PI;
-  return 0;
-}
 mpf_class Calculator::evaluate() {
   if (!stack.empty())
     throw "stack is not clear";
@@ -79,22 +62,33 @@ mpf_class Calculator::evaluate() {
         y = popLast();
         x = popLast();
         tmp.push_back(operate(x, y, i[0]));
-      } else if (i.substr(0, 1) == "f") {
-        char params = i[1];
-        i = i.substr(3, i.length() - 1);
+        continue;
+      }
+      size_t delim = i.find('_');
+      if(delim == std::string::npos) continue;
+      std::string prefix = i.substr(0, delim);
+      char params = prefix[1];
+      char set{' '}; //setting on some functions
+      if(prefix.length() > 2) set = prefix[2];
+      i = i.substr(delim + 1, i.length() - 1);
+      if(prefix[0] == 'f') {
         switch(params) {
-          case '1':
-            if(tmp.size() < 1) throw "not enough params";
-            tmp.push_back(functions[i](popLast()));
+          case '1': {
+            mpf_class ans;
+            if(set == 't') {
+              ans = trig_functions[i](popLast(), m_settings & flags::DEGREES);
+            } else {
+              ans = functions[i](popLast());
+            }
+            tmp.push_back(ans);
             break;
+          }
           case '2':
             if(tmp.size() < 2) throw "not enough params";
             mpf_class x = popLast();
             tmp.push_back(functions2[i](popLast(), x));
             break;
         }
-      } else if (i.substr(0, 1) == "v") {
-        tmp.push_back(convertVariable(i));
       }
     }
   }
@@ -114,7 +108,7 @@ void Calculator::parse(std::string s) {
   auto pushTmp = [&]() {
     if (tmp.front() == '.')
       tmp = '0' + tmp;
-    push_back(tmp);
+    push_back(mpf_class(tmp));
     tmp.clear();
   };
   for (size_t i = 0; i < s.length(); ++i) {
@@ -143,15 +137,15 @@ void Calculator::parse(std::string s) {
         };
         while (isalpha(s[i]) || isdigit(s[i])) // eat up alpha characters
           str += s[i++];
-       
         --i;
         if(seekNPush(this->functions, "f1_")) continue;
+        if(seekNPush(this->trig_functions, "f1t_")) continue;
         if(seekNPush(this->functions2, "f2_")) continue;
         if(seekNPush(this->const_variables, "c_")) continue;
         if(seekNPush(this->vars, "v_")) continue;
       }
       if (!isspace(s[i])) {
-        push_back(std::string() + s[i]);
+        push_back(s[i]);
       }
     }
   }
@@ -167,23 +161,65 @@ std::string Calculator::getStack() const {
   }
   return s;
 }
-// pushes
+// pushes an int directly onto the stack
 void Calculator::push_back(mpf_class d) {
   values.push_back(d);
   queue.push_back("%d");
+  lastType = DIGIT;
 }
+
+void Calculator::clear() {
+  std::cout << "finished parsing ";
+  while(!parenStack.empty()) {
+    queue.push_back(parenStack.back());
+    parenStack.pop_back();
+  }
+  lastType = NO;
+  in_paren = 0;
+}
+void Calculator::push_back(char c) {
+  switch(c) {
+    case '\n':
+      clear();
+      break;
+    case '(':
+      parenStack.push_back(std::string() + c);
+      in_paren++;
+      if ((lastType == DIGIT || lastType == PAREN_CLOSE))
+        push_back("`");
+      lastType = PAREN_OPEN;
+      break;
+    case ')':
+      if(in_paren == 0) return;
+      while (parenStack.back() != "(" && !parenStack.empty()) {
+        queue.push_back(parenStack.back());
+        parenStack.pop_back();
+      }
+      in_paren--;
+      parenStack.pop_back();
+      lastType = PAREN_CLOSE;
+      break;
+    default:
+      lastType = OPERATOR;
+      int precedence = getPrecedence(c);
+      if(precedence == 0) return;
+      std::vector<std::string> &use = in_paren > 0 ? parenStack : stack;
+      if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
+        push(use);
+      }
+      if (c == '`')
+        stack.push_back("*");
+      else
+        use.push_back(std::string() + c);
+      break;
+  }
+}
+//TODO: REFACTOR INTO MULTIPLE FUNCTIONS.
 void Calculator::push_back(std::string c) {
-  static bool in_paren{false};
-  static equation_type lastType;
-  static std::vector<std::string> parenStack;
   // if i encounter a newline, reset the state of the function so i can read
   // more equations
-  if (c[0] == '\n') {
-    parenStack.clear();
-    lastType = NO;
-    in_paren = false;
+  if (c[0] == '\n')
     return;
-  }
   if (isdigit(c[0]) || (c[0] == '-' && c.length() > 1)) {
     if (lastType == PAREN_CLOSE) {
       push_back("`");
@@ -191,35 +227,9 @@ void Calculator::push_back(std::string c) {
     queue.push_back("%d");
     values.emplace_back(c);
     lastType = DIGIT;
-  } else if (c.size() == 1) {
-    if (c == "(") {
-      parenStack.push_back(c);
-      in_paren = true;
-      if ((lastType == DIGIT || lastType == PAREN_CLOSE))
-        push_back("`");
-      lastType = PAREN_OPEN;
-    } else if (c == ")") {
-      while (parenStack.back() != "(" && !parenStack.empty()) {
-        queue.push_back(parenStack.back());
-        parenStack.pop_back();
-      }
-      in_paren = false;
-      parenStack.pop_back();
-      lastType = PAREN_CLOSE;
-    } else if (c.size() == 1) {
-      lastType = OPERATOR;
-      int precedence = getPrecedence(c[0]);
-      if(precedence == 0) return;
-      std::vector<std::string> &use = in_paren ? parenStack : stack;
-      if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
-        push(use);
-      }
-      if (c == "`")
-        stack.push_back("*");
-      else
-        use.push_back(c);
-    }
-  } else if (!isspace(c[0])) {
+  } else if(c.size() == 1)
+    std::cout << "size 1 string passed\n";
+  else {
     if (lastType == DIGIT)
       push_back("`");
     std::string str = c.substr(2);

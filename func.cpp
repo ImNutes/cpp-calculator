@@ -53,7 +53,8 @@ mpq_class Func::bernoulli(unsigned int n) {
   return res;
 }
 
-mpf_class Func::mpf_sin(mpf_class t) {
+mpf_class Func::mpf_sin(mpf_class t, bool deg) {
+  if(deg) t = degToRad(t);
   t = reduceRad(t);
   std::function<mpf_class(int n)> fn = [=](int n) {
     mpf_class numerator = pow(-1, n);
@@ -66,7 +67,8 @@ mpf_class Func::mpf_sin(mpf_class t) {
   return t;
 }
 
-mpf_class Func::mpf_cos(mpf_class t) {
+mpf_class Func::mpf_cos(mpf_class t, bool deg) {
+  if(deg) t = degToRad(t);
   t = reduceRad(t);
   std::function<mpf_class(int n)> fn = [=](int n) {
     mpf_class numerator = pow(-1, n);
@@ -78,8 +80,8 @@ mpf_class Func::mpf_cos(mpf_class t) {
   t = summation(fn);
   return t;
 }
-
-mpf_class Func::mpf_tan(mpf_class t) {
+mpf_class Func::mpf_tan(mpf_class t, bool deg) {
+  if(deg) t = degToRad(t);
   return mpf_sin(t) / mpf_cos(t);
   // the below solution works and should be faster but only if T < pi/2, the
   // above solution always works
@@ -96,8 +98,7 @@ mpf_class Func::mpf_tan(mpf_class t) {
   // return summation(fn, ACCURACY * 2, 1);
 }
 
-//from https://stackoverflow.com/a/42542593
-mpf_class Func::mpf_atan(mpf_class t) {
+mpf_class Func::mpf_atan(mpf_class t, bool deg) {
   if(t > 1) return pi/2 - mpf_atan(1/t);
   //this is cheating
   if(t == 1) return pi/4;
@@ -108,12 +109,13 @@ mpf_class Func::mpf_atan(mpf_class t) {
     res *= (numerator / denominator);
     return res;
   };
+  if(deg) return radToDeg(summation(fn, ACCURACY * 2));
   return summation(fn, ACCURACY * 2);
 }
 
-mpf_class Func::mpf_asin(mpf_class t) {
+mpf_class Func::mpf_asin(mpf_class t, bool deg) {
   if(abs(t) > 1) throw "invalid input";
-  return mpf_atan2(t, sqrt(1 - pow(t,2)));
+  return mpf_atan(t/sqrt(1 - pow(t,2)), deg);
   // std::function<mpf_class(int)> fn = [=](int n) {
   //   mpf_class numerator = mpz_fac(2 * n);
   //   mpf_class denominator = pow(4, n) * pow(mpz_fac(n), 2) * (2 * n + 1);
@@ -124,12 +126,12 @@ mpf_class Func::mpf_asin(mpf_class t) {
   // };
   // return summation(fn, ACCURACY * 2);
 }
-mpf_class Func::mpf_acos(mpf_class t) {
+mpf_class Func::mpf_acos(mpf_class t, bool deg) {
   if(abs(t) > 1) throw "invalid input";
-  return (pi / 2) - mpf_asin(t);
+  return (pi / 2) - mpf_asin(t, deg);
 }
-mpf_class Func::mpf_atan2(mpf_class y, mpf_class x) {
-  return mpf_atan(y / x) + (x < 0 ? pi : 0);
-}
+// mpf_class Func::mpf_atan2(mpf_class y, mpf_class x) {
+//   return mpf_atan(y / x) + (x < 0 ? pi : 0);
+// }
 
 //end of trig functions

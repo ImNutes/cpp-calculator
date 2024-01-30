@@ -17,9 +17,14 @@ namespace Func {
     while (t > pi) t -= 2*pi;
     return t;
   }
+  inline mpf_class radToDeg(mpf_class t) noexcept {
+    return t * 180 / pi;
+  }
+  inline mpf_class degToRad(mpf_class t) noexcept {
+    return t * pi / 180;
+  }
   mpz_class mpz_fac(unsigned long x);
   mpf_class pow(mpf_class t, long b);
-  mpf_class pow(mpf_class t, mpf_class b);
   mpf_class mpf_pow(mpf_class t, mpf_class b);
   mpf_class sqrt(mpf_class t);
   mpf_class abs(mpf_class t);
@@ -36,13 +41,13 @@ namespace Func {
   accurate to the 10th decimal
   although it may be faster to use a table, these functions should allow for an arbitrary amount of precision
   */
-  mpf_class mpf_sin(mpf_class t);
-  mpf_class mpf_cos(mpf_class t);
-  mpf_class mpf_tan(mpf_class t);
+  mpf_class mpf_sin(mpf_class t, bool deg = false);
+  mpf_class mpf_cos(mpf_class t, bool deg = false);
+  mpf_class mpf_tan(mpf_class t, bool deg = false);
   //these guys kind of suck, ranked in order of sucking from least to greatest
-  mpf_class mpf_atan(mpf_class t);
-  mpf_class mpf_atan2(mpf_class y, mpf_class x);
-  mpf_class mpf_asin(mpf_class t);
-  mpf_class mpf_acos(mpf_class t);
+  mpf_class mpf_atan(mpf_class t, bool deg = false);
+  //mpf_class mpf_atan2(mpf_class y, mpf_class x);
+  mpf_class mpf_asin(mpf_class t, bool deg = false);
+  mpf_class mpf_acos(mpf_class t, bool deg = false);
 }
 #endif

@@ -4,7 +4,6 @@
 #include <readline/history.h>
 #include <string.h>
 #include "Calculator.hpp"
-
 const std::string prompt = "~> ";
 std::vector<std::string> vocab;
 //wraps readline and the history functions
@@ -29,30 +28,22 @@ char* cmd_gen(const char * text, int state) {
     if(strncmp(name, text, len) == 0)
       return strdup(name);
   }
-  // while(list_index < vocab.size()) {
-  //   char * now = strdup(vocab[list_index].c_str());
-  //   if(strncmp(now, text, len) == 0) {
-  //     std::cout << "returned " << now << "\n";
-  //     return now;
-  //   }
-  //   free(now);
-  //   list_index++;
-  // }
   return (char*) NULL;
 }
 char ** completion(const char * text, int start, int end) {
   char ** matches;
   matches = (char **)NULL;
+  rl_attempted_completion_over = 1;
   matches = rl_completion_matches(text, cmd_gen);
   return matches;
 }
-//various readline function intitialization
 void readInit() {
   using_history();
   rl_readline_name = "Calculator";
   rl_attempted_completion_function = completion;
 }
 int main(int argc, char *argv[]) {
+  std::cout << std::endl;
   Calculator calculator;
   vocab = calculator.genVocab();
   readInit();
@@ -61,6 +52,14 @@ int main(int argc, char *argv[]) {
     while(true) {
       input = myread(prompt);
       if(input == "exit" || input[0] == 'q') break;
+      if(input == "angle") {
+        calculator.m_settings ^= DEGREES;
+        continue;
+      }
+      //only works on linux
+      if(input == "clear") {
+        std::cout << "\033[2J\033[1;1H" << std::endl;
+      }
       try {
         calculator.parse(input);
         std::cout << "RPN: " << calculator.getRPN() << "\n";
