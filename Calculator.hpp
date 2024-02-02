@@ -35,6 +35,7 @@ public:
   mpf_class parse(const std::string &s);
   const std::vector<std::string> genVocab() const;
 private:
+  mpf_class ans;
   enum flags {
     DEGREES = 1 << 0
   };
@@ -76,8 +77,8 @@ private:
       {"pi", std::numbers::pi}, {"e", std::numbers::e}, {"phi", std::numbers::phi}
   };
 //not fully implemented
-  std::map<std::string, mpf_class> vars = {
-      {"ans", 0}, {"x", 0}
-  };
+  // std::map<std::string, mpf_class> vars = {
+  //     {"ans", 0}, {"x", 0}
+  // };
 };
 #endif

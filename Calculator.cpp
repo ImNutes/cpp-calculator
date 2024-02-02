@@ -45,11 +45,14 @@ mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) noexcept {
 mpf_class Calculator::evaluate() {
   if (!stack.empty())
     throw "stack is not clear";
-  if(values.empty()) return 0;
+  if (values.empty())
+    return 0;
   std::vector<mpf_class> tmp;
   int j = 0;
-  for (std::string i : queue) {
-    if (i == "%d" || (i == "%v" && j != 0)) {
+  std::string var;
+  for (size_t z = 0; z < queue.size(); ++z) {
+    std::string &i = queue[z];
+    if (i[0] == '%') {
       tmp.push_back(values[j++]);
     } else {
       auto popLast = [&]() {
@@ -67,42 +70,45 @@ mpf_class Calculator::evaluate() {
         continue;
       }
       size_t delim = i.find('_');
-      if(delim == std::string::npos) continue;
+      if (delim == std::string::npos)
+        continue;
       std::string prefix = i.substr(0, delim);
       char params = prefix[1];
-      char set{' '}; //setting on some functions
-      if(prefix.length() > 2) set = prefix[2];
+      char set{' '}; // setting on some functions
+      if (prefix.length() > 2)
+        set = prefix[2];
       i = i.substr(delim + 1, i.length() - 1);
-      if(prefix[0] == 'f') {
-        switch(params) {
-          case '1': {
-            mpf_class ans;
-            if(set == 't') {
-              ans = trig_functions[i](popLast(), m_settings & flags::DEGREES);
-            } else {
-              ans = functions[i](popLast());
-            }
-            tmp.push_back(ans);
-            break;
+      if (prefix[0] == 'f') {
+        switch (params) {
+        case '1': {
+          mpf_class ans;
+          if (set == 't') {
+            ans = trig_functions[i](popLast(), m_settings & flags::DEGREES);
+          } else {
+            ans = functions[i](popLast());
           }
-          case '2':
-            if(tmp.size() < 2) throw "not enough params";
-            mpf_class x = popLast();
-            tmp.push_back(functions2[i](popLast(), x));
-            break;
+          tmp.push_back(ans);
+          break;
+        }
+        case '2':
+          if (tmp.size() < 2)
+            throw "not enough params";
+          mpf_class x = popLast();
+          tmp.push_back(functions2[i](popLast(), x));
+          break;
         }
       }
     }
   }
   if (tmp.size() > 2)
     throw "tmp brok ";
-  this->vars["ans"] = tmp.back();
-  return this->vars["ans"];
+  this->ans = tmp.back();
+  return this->ans;
 }
 bool Calculator::updateMode(const std::string &mode) {
-  if(mode == "deg" || mode == "degrees")
+  if (mode == "deg" || mode == "degrees")
     m_settings |= DEGREES;
-  else if(mode == "rad" || mode == "radians")
+  else if (mode == "rad" || mode == "radians")
     m_settings &= ~DEGREES;
   return true;
 }
@@ -124,10 +130,10 @@ mpf_class Calculator::parse(const std::string &s) {
   for (size_t i = 0; i < s.length(); ++i) {
     if (isspace(s[i]))
       continue;
-    if(tmp.empty() && s[i] == '-' && isdigit(s[i+1])) {
+    if (tmp.empty() && s[i] == '-' && isdigit(s[i + 1])) {
       tmp += s[i++];
     }
-    if (isdigit(s[i]) || s[i] == '.' ) {
+    if (isdigit(s[i]) || s[i] == '.') {
       tmp += s[i];
       in_digit = true;
     } else {
@@ -147,19 +153,24 @@ mpf_class Calculator::parse(const std::string &s) {
         };
         while (isalpha(s[i]) || isdigit(s[i])) // eat up alpha characters
           str += s[i++];
-        --i;
-        if(seekNPush(this->functions, "f1_")) continue;
-        if(seekNPush(this->trig_functions, "f1t_")) continue;
-        if(seekNPush(this->functions2, "f2_")) continue;
-        if(seekNPush(this->const_variables, "c_")) continue;
-        if(seekNPush(this->vars, "v_")) continue;
+
+         --i;
+        if (seekNPush(this->functions, "f1_"))
+          continue;
+        if (seekNPush(this->trig_functions, "f1t_"))
+          continue;
+        if (seekNPush(this->functions2, "f2_"))
+          continue;
+        if (seekNPush(this->const_variables, "c_"))
+          continue;
+        if(str == "ans") { push_back(ans); }
       }
       if (!isspace(s[i])) {
         push_back(s[i]);
       }
     }
   }
-  if (!tmp.empty()){
+  if (!tmp.empty()) {
     pushTmp();
   }
   push();
@@ -181,7 +192,7 @@ void Calculator::push_back(mpf_class d) {
 }
 
 void Calculator::clear() {
-  while(!parenStack.empty()) {
+  while (!parenStack.empty()) {
     queue.push_back(parenStack.back());
     parenStack.pop_back();
   }
@@ -189,42 +200,43 @@ void Calculator::clear() {
   in_paren = 0;
 }
 void Calculator::push_back(char c) {
-  switch(c) {
-    case '\n':
-      clear();
-      break;
-    case '(':
-      parenStack.push_back(std::string() + c);
-      ++in_paren;
-      if ((lastType == DIGIT || lastType == PAREN_CLOSE)) {
-        push_back('`');
-      }
-      lastType = PAREN_OPEN;
-      break;
-    case ')':
-      if(in_paren == 0) return;
-      while (parenStack.back() != "(" && !parenStack.empty()) {
-        queue.push_back(parenStack.back());
-        parenStack.pop_back();
-      }
-      --in_paren;
+  switch (c) {
+  case '\n':
+    clear();
+    break;
+  case '(':
+    parenStack.push_back(std::string() + c);
+    ++in_paren;
+    if ((lastType == DIGIT || lastType == PAREN_CLOSE)) {
+      push_back('`');
+    }
+    lastType = PAREN_OPEN;
+    break;
+  case ')':
+    if (in_paren == 0)
+      return;
+    while (parenStack.back() != "(" && !parenStack.empty()) {
+      queue.push_back(parenStack.back());
       parenStack.pop_back();
-      lastType = PAREN_CLOSE;
-      break;
-    default:
-      lastType = OPERATOR;
-      int precedence = getPrecedence(c);
-      if(precedence == 0) return;
-      std::vector<std::string> &use = in_paren > 0 ? parenStack : stack;
-      if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
-        push(use);
-      }
-      if (c == '`') {
-        stack.push_back("*");
-      }
-      else
-        use.push_back(std::string() + c);
-      break;
+    }
+    --in_paren;
+    parenStack.pop_back();
+    lastType = PAREN_CLOSE;
+    break;
+  default:
+    lastType = OPERATOR;
+    int precedence = getPrecedence(c);
+    if (precedence == 0)
+      return;
+    std::vector<std::string> &use = in_paren > 0 ? parenStack : stack;
+    if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
+      push(use);
+    }
+    if (c == '`') {
+      stack.push_back("*");
+    } else
+      use.push_back(std::string() + c);
+    break;
   }
 }
 void Calculator::push_back(const std::string &c) {
@@ -241,29 +253,23 @@ void Calculator::push_back(const std::string &c) {
     queue.push_back("%d");
     values.emplace_back(c);
     lastType = DIGIT;
-  } else if(c.size() == 1)
-    std::cout << c << " size 1 string passed\n";
+  }
   else {
     if (lastType == DIGIT) {
       push_back('`');
     }
     std::string str = c.substr(2);
-    switch(c[0]) {
-      case 'f': {
-        stack.push_back(c);
-        lastType = FUNCTION;
-        break;
-      }
-      case 'c':
-        values.push_back(const_variables.at(str));
-        queue.push_back("%d");
-        lastType = DIGIT;
-        break;
-      case 'v':
-        values.push_back(vars.at(str));
-        queue.push_back("%v");
-        lastType = DIGIT;
-        break;
+    switch (c[0]) {
+    case 'f': {
+      stack.push_back(c);
+      lastType = FUNCTION;
+      break;
+    }
+    case 'c':
+      values.push_back(const_variables.at(str));
+      queue.push_back("%d");
+      lastType = DIGIT;
+      break;
     }
   }
 }
@@ -297,19 +303,17 @@ std::string Calculator::getQueue() const {
   return tmp;
 }
 const std::vector<std::string> Calculator::genVocab() const {
-  //bad code to generate a vocab vector for autocompletion
+  // bad code to generate a vocab vector for autocompletion
   std::vector<std::string> vocab;
   auto addToVocab = [&](auto a) {
-    for(auto &i : a) {
+    for (auto &i : a) {
       vocab.push_back((i.first));
-      std::cout << i.first;
     }
-    std::cout << std::endl;
   };
   addToVocab(trig_functions);
   addToVocab(functions);
   addToVocab(functions2);
-  addToVocab(vars);
   addToVocab(const_variables);
+  vocab.push_back("ans");
   return vocab;
 }
