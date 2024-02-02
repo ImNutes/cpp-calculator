@@ -1,6 +1,7 @@
 #pragma once
 #ifndef CALCULATOR_HPP
 #define CALCULATOR_HPP
+
 #include <array>
 #include <gmpxx.h>
 #include <functional>
@@ -9,21 +10,14 @@
 #include <vector>
 #include <map>
 #include <cmath>
-#include <bitset>
 #include "func.hpp"
-enum flags {
-  DEGREES = 1 << 0
-};
+
 class Calculator {
-enum equation_type { OPERATOR, DIGIT, PAREN_OPEN, PAREN_CLOSE, FUNCTION, VARIABLE, NO };
+enum equation_type { NO, OPERATOR, DIGIT, PAREN_OPEN, PAREN_CLOSE, FUNCTION, VARIABLE};
 public:
-
-  //manages calculator settings as defined in flags variable
-  int m_settings;
-
   Calculator();
-  Calculator(std::string s);
-  void push_back(std::string c);
+  Calculator(const std::string &s);
+  void push_back(const std::string &c);
   void push_back(char c);
   void push_back(mpf_class d);
   // pushes off everything that remains on the stack
@@ -35,13 +29,19 @@ public:
   std::string getQueue() const;
   std::string getRPN() const;
 
-  //WILL CLEAR BOTH THE QUEUE AND THE STACK
-  void parse(std::string s);
-  std::vector<std::string> genVocab();
-private:
+  bool updateMode(const std::string &mode);
 
+  //WILL CLEAR BOTH THE QUEUE AND THE STACK
+  mpf_class parse(const std::string &s);
+  const std::vector<std::string> genVocab() const;
+private:
+  enum flags {
+    DEGREES = 1 << 0
+  };
+  //manages calculator settings as defined in flags variable
+  int m_settings{0};
   //manages state of push_back and parsing functions
-  equation_type lastType;
+  equation_type lastType{NO};
   int in_paren{0};
   
   mpf_class operate(mpf_class x, mpf_class y, char c) noexcept;

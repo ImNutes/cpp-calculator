@@ -1,9 +1,5 @@
 #include "func.hpp"
-#include <chrono>
 #include <gmpxx.h>
-#include <mutex>
-#include <atomic>
-#include <thread>
 mpf_class Func::summation(std::function<mpf_class(int)> fn, int x, int y) {
   mpf_class sum = 0;
   for (int i = y; i < x + y; ++i)

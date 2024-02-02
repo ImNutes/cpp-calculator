@@ -4,9 +4,11 @@
 #include <cmath>
 #include <numbers>
 Calculator::Calculator() {}
-Calculator::Calculator(std::string s) { parse(s); }
+Calculator::Calculator(const std::string &s) { parse(s); }
 constexpr int Calculator::getPrecedence(char c) noexcept {
   switch (c) {
+  case '=':
+    return 1;
   case '+':
   case '-':
     return 2;
@@ -47,7 +49,7 @@ mpf_class Calculator::evaluate() {
   std::vector<mpf_class> tmp;
   int j = 0;
   for (std::string i : queue) {
-    if (i == "%d") {
+    if (i == "%d" || (i == "%v" && j != 0)) {
       tmp.push_back(values[j++]);
     } else {
       auto popLast = [&]() {
@@ -55,9 +57,9 @@ mpf_class Calculator::evaluate() {
         tmp.pop_back();
         return x;
       };
-      if (i.length() == 1) {
+      if (i.length() == 1 && i != ",") {
         if (tmp.size() < 2)
-          break;
+          throw "tmp is bad";
         mpf_class x, y;
         y = popLast();
         x = popLast();
@@ -93,16 +95,24 @@ mpf_class Calculator::evaluate() {
     }
   }
   if (tmp.size() > 2)
-    throw "tmp ";
+    throw "tmp brok ";
   this->vars["ans"] = tmp.back();
   return this->vars["ans"];
 }
-void Calculator::parse(std::string s) {
+bool Calculator::updateMode(const std::string &mode) {
+  if(mode == "deg" || mode == "degrees")
+    m_settings |= DEGREES;
+  else if(mode == "rad" || mode == "radians")
+    m_settings &= ~DEGREES;
+  return true;
+}
+mpf_class Calculator::parse(const std::string &s) {
   queue.clear();
   stack.clear();
   values.clear();
+  lastType = NO;
   if (s.empty() || s == "\n")
-    return;
+    return 0;
   std::string tmp;
   bool in_digit = 0;
   auto pushTmp = [&]() {
@@ -127,7 +137,7 @@ void Calculator::parse(std::string s) {
       }
       if (isalpha(s[i])) {
         std::string str;
-        auto seekNPush = [&](auto map, std::string prefix) {
+        auto seekNPush = [&](auto map, const std::string &prefix) {
           auto f = map.find(str);
           if (f != map.end()) {
             push_back(prefix + str);
@@ -149,10 +159,12 @@ void Calculator::parse(std::string s) {
       }
     }
   }
-  if (!tmp.empty())
+  if (!tmp.empty()){
     pushTmp();
+  }
   push();
   push_back("\n");
+  return evaluate();
 }
 std::string Calculator::getStack() const {
   std::string s;
@@ -169,7 +181,6 @@ void Calculator::push_back(mpf_class d) {
 }
 
 void Calculator::clear() {
-  std::cout << "finished parsing ";
   while(!parenStack.empty()) {
     queue.push_back(parenStack.back());
     parenStack.pop_back();
@@ -184,9 +195,10 @@ void Calculator::push_back(char c) {
       break;
     case '(':
       parenStack.push_back(std::string() + c);
-      in_paren++;
-      if ((lastType == DIGIT || lastType == PAREN_CLOSE))
-        push_back("`");
+      ++in_paren;
+      if ((lastType == DIGIT || lastType == PAREN_CLOSE)) {
+        push_back('`');
+      }
       lastType = PAREN_OPEN;
       break;
     case ')':
@@ -195,7 +207,7 @@ void Calculator::push_back(char c) {
         queue.push_back(parenStack.back());
         parenStack.pop_back();
       }
-      in_paren--;
+      --in_paren;
       parenStack.pop_back();
       lastType = PAREN_CLOSE;
       break;
@@ -207,37 +219,41 @@ void Calculator::push_back(char c) {
       if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
         push(use);
       }
-      if (c == '`')
+      if (c == '`') {
         stack.push_back("*");
+      }
       else
         use.push_back(std::string() + c);
       break;
   }
 }
-//TODO: REFACTOR INTO MULTIPLE FUNCTIONS.
-void Calculator::push_back(std::string c) {
+void Calculator::push_back(const std::string &c) {
   // if i encounter a newline, reset the state of the function so i can read
   // more equations
-  if (c[0] == '\n')
+  if (c[0] == '\n') {
+    clear();
     return;
+  }
   if (isdigit(c[0]) || (c[0] == '-' && c.length() > 1)) {
     if (lastType == PAREN_CLOSE) {
-      push_back("`");
+      push_back('`');
     }
     queue.push_back("%d");
     values.emplace_back(c);
     lastType = DIGIT;
   } else if(c.size() == 1)
-    std::cout << "size 1 string passed\n";
+    std::cout << c << " size 1 string passed\n";
   else {
-    if (lastType == DIGIT)
-      push_back("`");
+    if (lastType == DIGIT) {
+      push_back('`');
+    }
     std::string str = c.substr(2);
     switch(c[0]) {
-      case 'f':
+      case 'f': {
         stack.push_back(c);
         lastType = FUNCTION;
         break;
+      }
       case 'c':
         values.push_back(const_variables.at(str));
         queue.push_back("%d");
@@ -245,7 +261,7 @@ void Calculator::push_back(std::string c) {
         break;
       case 'v':
         values.push_back(vars.at(str));
-        queue.push_back("%d");
+        queue.push_back("%v");
         lastType = DIGIT;
         break;
     }
@@ -280,13 +296,17 @@ std::string Calculator::getQueue() const {
   }
   return tmp;
 }
-std::vector<std::string> Calculator::genVocab() {
+const std::vector<std::string> Calculator::genVocab() const {
   //bad code to generate a vocab vector for autocompletion
   std::vector<std::string> vocab;
   auto addToVocab = [&](auto a) {
-    for(auto &i : a)
+    for(auto &i : a) {
       vocab.push_back((i.first));
+      std::cout << i.first;
+    }
+    std::cout << std::endl;
   };
+  addToVocab(trig_functions);
   addToVocab(functions);
   addToVocab(functions2);
   addToVocab(vars);
