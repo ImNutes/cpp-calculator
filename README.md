@@ -5,8 +5,8 @@ It also uses the GNU Readline Library to handle history and editing
 - All basic arithmetic supported
 - Trigonometric functions implemented (sin, cos, tan, asin, acos, atan)
 - Degrees and radians implemented
-## Running
-- make main should work
+## Compilation
+- make main should work just fine
 
 ## Dependencies
 - GMP
