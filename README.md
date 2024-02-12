@@ -6,8 +6,10 @@ It also uses the GNU Readline Library to handle history and editing
 - Trigonometric functions implemented (sin, cos, tan, asin, acos, atan)
 - Degrees and radians implemented: use commands 'mode rad' and 'mode deg'
 ## Compilation
-- make main should work just fine
-
+- ```console
+  make main
+  ```
+  To compile
 ## Dependencies
 - GMP
 - GNU Readline and History
