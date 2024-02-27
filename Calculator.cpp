@@ -5,7 +5,7 @@
 #include <numbers>
 Calculator::Calculator() {}
 Calculator::Calculator(const std::string &s) { parse(s); }
-constexpr int Calculator::getPrecedence(char c) noexcept {
+constexpr int Calculator::getPrecedence(char c) const noexcept {
   switch (c) {
   case '=':
     return 1;
@@ -24,7 +24,7 @@ constexpr int Calculator::getPrecedence(char c) noexcept {
     return 0;
   }
 }
-mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) noexcept {
+mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) const noexcept {
   switch (c) {
   case '`':
   case '*':
@@ -47,17 +47,16 @@ mpf_class Calculator::evaluate() {
     throw "stack is not clear";
   if (values.empty())
     return 0;
-  std::vector<mpf_class> tmp;
+  std::stack<mpf_class> tmp;
   int j = 0;
-  std::string var;
   for (size_t z = 0; z < queue.size(); ++z) {
     std::string &i = queue[z];
     if (i[0] == '%') {
-      tmp.push_back(values[j++]);
+      tmp.push(values[j++]);
     } else {
       auto popLast = [&]() {
-        mpf_class x = tmp.back();
-        tmp.pop_back();
+        mpf_class x = tmp.top();
+        tmp.pop();
         return x;
       };
       if (i.length() == 1 && i != ",") {
@@ -66,7 +65,7 @@ mpf_class Calculator::evaluate() {
         mpf_class x, y;
         y = popLast();
         x = popLast();
-        tmp.push_back(operate(x, y, i[0]));
+        tmp.push(operate(x, y, i[0]));
         continue;
       }
       size_t delim = i.find('_');
@@ -87,14 +86,14 @@ mpf_class Calculator::evaluate() {
           } else {
             ans = functions[i](popLast());
           }
-          tmp.push_back(ans);
+          tmp.push(ans);
           break;
         }
         case '2':
           if (tmp.size() < 2)
             throw "not enough params";
           mpf_class x = popLast();
-          tmp.push_back(functions2[i](popLast(), x));
+          tmp.push(functions2[i](popLast(), x));
           break;
         }
       }
@@ -102,7 +101,7 @@ mpf_class Calculator::evaluate() {
   }
   if (tmp.size() > 2)
     throw "tmp brok ";
-  this->ans = tmp.back();
+  this->ans = tmp.top();
   return this->ans;
 }
 bool Calculator::updateMode(const std::string &mode) {
@@ -110,21 +109,24 @@ bool Calculator::updateMode(const std::string &mode) {
     m_settings |= DEGREES;
   else if (mode == "rad" || mode == "radians")
     m_settings &= ~DEGREES;
+  else return false;
   return true;
 }
 mpf_class Calculator::parse(const std::string &s) {
-  queue.clear();
-  stack.clear();
-  values.clear();
+  queue = {};
+  stack = {};
+  values = {};
   lastType = NO;
   if (s.empty() || s == "\n")
     return 0;
   std::string tmp;
+  int base = 10;
   bool in_digit = 0;
   auto pushTmp = [&]() {
     if (tmp.front() == '.')
       tmp = '0' + tmp;
-    push_back(mpf_class(tmp));
+    push_back(mpf_class(tmp, 64, base));
+    base = 10;
     tmp.clear();
   };
   for (size_t i = 0; i < s.length(); ++i) {
@@ -132,8 +134,22 @@ mpf_class Calculator::parse(const std::string &s) {
       continue;
     if (tmp.empty() && s[i] == '-' && isdigit(s[i + 1])) {
       tmp += s[i++];
+    } else if((tmp.empty() || (tmp.size() == 1 && tmp[0] == '-')) && 
+      s[i] == '0') {
+      if(isalpha(s[i + 1])) {
+        switch(s[i + 1]) {
+          case 'x':
+            base = 16;
+            break;
+          case 'b':
+            base = 2;
+            break;
+        };
+        ++i;
+        continue;
+      }
     }
-    if (isdigit(s[i]) || s[i] == '.') {
+    if (isdigit(s[i]) || s[i] == '.' || ( base > 10 && isalpha(s[i]) && s[i] >= 97 && s[i] <= 102)) { //check if between a-f (hex)
       tmp += s[i];
       in_digit = true;
     } else {
@@ -154,7 +170,7 @@ mpf_class Calculator::parse(const std::string &s) {
         while (isalpha(s[i]) || isdigit(s[i])) // eat up alpha characters
           str += s[i++];
 
-         --i;
+        --i;
         if (seekNPush(this->functions, "f1_"))
           continue;
         if (seekNPush(this->trig_functions, "f1t_"))
@@ -163,7 +179,9 @@ mpf_class Calculator::parse(const std::string &s) {
           continue;
         if (seekNPush(this->const_variables, "c_"))
           continue;
-        if(str == "ans") { push_back(ans); }
+        if (str == "ans") {
+          push_back(ans);
+        }
       }
       if (!isspace(s[i])) {
         push_back(s[i]);
@@ -177,13 +195,13 @@ mpf_class Calculator::parse(const std::string &s) {
   push_back("\n");
   return evaluate();
 }
-std::string Calculator::getStack() const {
-  std::string s;
-  for (std::string i : stack) {
-    s += i;
-  }
-  return s;
-}
+// std::string Calculator::getStack() const {
+//   std::string s;
+//   for (std::string i : stack) {
+//     s += i;
+//   }
+//   return s;
+// }
 // pushes an int directly onto the stack
 void Calculator::push_back(mpf_class d) {
   values.push_back(d);
@@ -193,8 +211,8 @@ void Calculator::push_back(mpf_class d) {
 
 void Calculator::clear() {
   while (!parenStack.empty()) {
-    queue.push_back(parenStack.back());
-    parenStack.pop_back();
+    queue.push_back(parenStack.top());
+    parenStack.pop();
   }
   lastType = NO;
   in_paren = 0;
@@ -205,7 +223,7 @@ void Calculator::push_back(char c) {
     clear();
     break;
   case '(':
-    parenStack.push_back(std::string() + c);
+    parenStack.push(std::string() + c);
     ++in_paren;
     if ((lastType == DIGIT || lastType == PAREN_CLOSE)) {
       push_back('`');
@@ -215,12 +233,12 @@ void Calculator::push_back(char c) {
   case ')':
     if (in_paren == 0)
       return;
-    while (parenStack.back() != "(" && !parenStack.empty()) {
-      queue.push_back(parenStack.back());
-      parenStack.pop_back();
+    while (parenStack.top() != "(" && !parenStack.empty()) {
+      queue.push_back(parenStack.top());
+      parenStack.pop();
     }
     --in_paren;
-    parenStack.pop_back();
+    parenStack.pop();
     lastType = PAREN_CLOSE;
     break;
   default:
@@ -228,14 +246,14 @@ void Calculator::push_back(char c) {
     int precedence = getPrecedence(c);
     if (precedence == 0)
       return;
-    std::vector<std::string> &use = in_paren > 0 ? parenStack : stack;
-    if (!use.empty() && precedence <= getPrecedence(use.back()[0])) {
+    std::stack<std::string> &use = in_paren > 0 ? parenStack : stack;
+    if (!use.empty() && precedence <= getPrecedence(use.top()[0])) {
       push(use);
     }
     if (c == '`') {
-      stack.push_back("*");
+      stack.push("*");
     } else
-      use.push_back(std::string() + c);
+      use.push(std::string() + c);
     break;
   }
 }
@@ -253,15 +271,14 @@ void Calculator::push_back(const std::string &c) {
     queue.push_back("%d");
     values.emplace_back(c);
     lastType = DIGIT;
-  }
-  else {
+  } else {
     if (lastType == DIGIT) {
       push_back('`');
     }
     std::string str = c.substr(2);
     switch (c[0]) {
     case 'f': {
-      stack.push_back(c);
+      stack.push(c);
       lastType = FUNCTION;
       break;
     }
@@ -274,14 +291,14 @@ void Calculator::push_back(const std::string &c) {
   }
 }
 void Calculator::push() { push(this->stack); }
-void Calculator::push(std::vector<std::string> &stacc) {
+void Calculator::push(std::stack<std::string> &stacc) {
   while (stacc.size() > 0) {
-    if (stacc.back() == "(")
+    if (stacc.top() == "(")
       return;
-    if (!isspace(stacc.back()[0])) {
-      queue.push_back(stacc.back());
+    if (!isspace(stacc.top()[0])) {
+      queue.push_back(stacc.top());
     }
-    stacc.pop_back();
+    stacc.pop();
   }
 }
 std::string Calculator::getRPN() const {
@@ -316,4 +333,12 @@ const std::vector<std::string> Calculator::genVocab() const {
   addToVocab(const_variables);
   vocab.push_back("ans");
   return vocab;
+}
+
+const std::string Calculator::getSettings() const {
+  std::string res;
+  res += '[';
+  res += (m_settings & flags::DEGREES ? "deg" : "rad");
+  res += ']';
+  return res;
 }

@@ -95,7 +95,7 @@ mpf_class Func::mpf_tan(mpf_class t, bool deg) {
 }
 
 mpf_class Func::mpf_atan(mpf_class t, bool deg) {
-  if(t > 1) return pi/2 - mpf_atan(1/t);
+  if(abs(t) > 1) return pi/2 - mpf_atan(1/t);
   //this is cheating
   if(t == 1) return pi/4;
   std::function<mpf_class(int)> fn = [=](int n) {
@@ -131,3 +131,4 @@ mpf_class Func::mpf_acos(mpf_class t, bool deg) {
 // }
 
 //end of trig functions
+

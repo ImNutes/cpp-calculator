@@ -50,5 +50,7 @@ namespace Func {
   //mpf_class mpf_atan2(mpf_class y, mpf_class x);
   mpf_class mpf_asin(mpf_class t, bool deg = false);
   mpf_class mpf_acos(mpf_class t, bool deg = false);
+
+  mpf_class mpf_ln(mpf_class t);
 }
 #endif

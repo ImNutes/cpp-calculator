@@ -7,7 +7,8 @@
 #include <functional>
 #include <set>
 #include <string>
-#include <vector>
+#include <stack>
+#include <deque>
 #include <map>
 #include <cmath>
 #include "func.hpp"
@@ -22,7 +23,7 @@ public:
   void push_back(mpf_class d);
   // pushes off everything that remains on the stack
   void push();
-  void push(std::vector<std::string> &stacc);
+  void push(std::stack<std::string> &stacc);
 
   mpf_class evaluate();
   void clear();
@@ -34,24 +35,25 @@ public:
   //WILL CLEAR BOTH THE QUEUE AND THE STACK
   mpf_class parse(const std::string &s);
   const std::vector<std::string> genVocab() const;
+  const std::string getSettings() const;
 private:
   mpf_class ans;
   enum flags {
     DEGREES = 1 << 0
   };
-  //manages calculator settings as defined in flags variable
+  //manages general calculator settings as defined in flags variable
   int m_settings{0};
   //manages state of push_back and parsing functions
   equation_type lastType{NO};
   int in_paren{0};
   
-  mpf_class operate(mpf_class x, mpf_class y, char c) noexcept;
-  constexpr int getPrecedence(char c) noexcept;
+  mpf_class operate(mpf_class x, mpf_class y, char c) const noexcept;
+  constexpr int getPrecedence(char c) const noexcept;
   std::string getStack() const;
   std::vector<std::string> queue;
   std::vector<mpf_class> values;
-  std::vector<std::string> stack;
-  std::vector<std::string> parenStack;
+  std::stack<std::string> stack;
+  std::stack<std::string> parenStack;
 
 
   //functions
@@ -76,6 +78,7 @@ private:
   const std::map<std::string, mpf_class> const_variables = {
       {"pi", std::numbers::pi}, {"e", std::numbers::e}, {"phi", std::numbers::phi}
   };
+
 //not fully implemented
   // std::map<std::string, mpf_class> vars = {
   //     {"ans", 0}, {"x", 0}
