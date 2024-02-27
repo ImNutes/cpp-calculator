@@ -3,7 +3,6 @@
 #define FUNC_HPP
 
 #define ACCURACY 50
-#include <iostream>
 #include <algorithm>
 #include <gmpxx.h>
 #include <vector>

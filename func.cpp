@@ -1,5 +1,6 @@
 #include "func.hpp"
 #include <gmpxx.h>
+#include <iostream>
 mpf_class Func::summation(std::function<mpf_class(int)> fn, int x, int y) {
   mpf_class sum = 0;
   for (int i = y; i < x + y; ++i)
@@ -63,6 +64,7 @@ mpf_class Func::mpf_sin(mpf_class t, bool deg) {
   return t;
 }
 
+
 mpf_class Func::mpf_cos(mpf_class t, bool deg) {
   if(deg) t = degToRad(t);
   t = reduceRad(t);
@@ -111,6 +113,7 @@ mpf_class Func::mpf_atan(mpf_class t, bool deg) {
 
 mpf_class Func::mpf_asin(mpf_class t, bool deg) {
   if(abs(t) > 1) throw "invalid input";
+  if(abs(t) == 1) return (pi/2) * t; //lazy again
   return mpf_atan(t/sqrt(1 - pow(t,2)), deg);
   // std::function<mpf_class(int)> fn = [=](int n) {
   //   mpf_class numerator = mpz_fac(2 * n);
@@ -131,4 +134,3 @@ mpf_class Func::mpf_acos(mpf_class t, bool deg) {
 // }
 
 //end of trig functions
-
