@@ -3,7 +3,6 @@
 #include <iostream>
 #include <readline/history.h>
 #include <readline/readline.h>
-
 #include "Calculator.hpp"
 const std::string suffix = "~> ";
 std::vector<std::string> vocab;
@@ -46,30 +45,64 @@ void readInit() {
   rl_readline_name = "Calculator";
   rl_attempted_completion_function = completion;
 }
+enum outputFlags {
+  NONE = 1 << 0,
+  RPN = 1 << 1,
+  HEX = 1 << 2,
+  OCT = 1 << 3,
+  DEC = 1 << 4
+};
 int main(int argc, char *argv[]) {
   Calculator calculator;
-  std::string prompt = calculator.getSettings() + suffix;
+  std::string prompt = '[' + calculator.getSettings() + ']' + suffix;
   vocab = calculator.genVocab();
   readInit();
   mpf_set_default_prec(64);
   std::string input;
+  unsigned int out = 0;
   while (true) {
     input = myread(prompt);
     if (input == "exit" || input[0] == 'q')
       break;
-    // only works on linux
-    if (input == "clear") {
-      std::cout << "\033[2J\033[1;1H" << std::endl;
-    }
-    if (input.compare(0, 4, "mode") == 0) {
-      std::cout << calculator.updateMode(input.substr(5, input.length() - 1)) << std::endl;
-      prompt = calculator.getSettings() + suffix;
+    if(input.compare(0, 3, "set") == 0) {
+      std::string operation = input.substr(4);
+      if(operation.compare(0, 5, "angle") == 0) {
+        //todo: instead of taking a specific string, pass the operation to the updateMode function
+        std::cout << calculator.updateMode(operation.substr(6, operation.length() - 1)) << '\n';
+      } else if(operation.compare(0, 3, "out") == 0) {
+        //modify output, like oct, hex, etc
+      std::cout << "ora\n";
+        switch(tolower(operation[4])) {
+          case 'r':
+            out ^= RPN;
+            break;
+          case 'h':
+            out ^= HEX;
+            break;
+          case 'o':
+            out ^= OCT;
+            break;
+          case 'd':
+            out ^= DEC;
+            break;
+          case 'f':
+            out = -1; //set all bits
+            break;
+        }
+      std::cout << out << '\n';
+      }
+      prompt = '[' + calculator.getSettings() + ']' + suffix;
+    } else if(input.compare(0, 3, "out") == 0) {
     } else {
       try {
-        std::cout << std::setprecision(10) << calculator.parse(input) << "\n";
+        mpf_class res = calculator.parse(input);
+        if(out & HEX) std::cout << "hex: " << std::hex << res << '\n';
+        if(out & OCT) std::cout << "oct: " << std::oct << res << '\n'; //there is a less readable way to do this
+        if(out & RPN) std::cout << "rpn: " << calculator.getRPN() << '\n';
+        std::cout << std::setprecision(10) << std::dec << res << "\n";
         //std::cout << calculator.getRPN() << "\n";
-      } catch (const char *msg) {
-        std::cerr << msg << "\n";
+      } catch (std::exception &e) {
+        std::cerr << "Error: " << e.what() << "\n";
       }
     }
   }

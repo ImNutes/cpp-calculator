@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <stdexcept>
 Calculator::Calculator() {}
 Calculator::Calculator(const std::string &s) { parse(s); }
 constexpr int Calculator::getPrecedence(char c) const noexcept {
@@ -44,7 +45,7 @@ mpf_class Calculator::operate(mpf_class x, mpf_class y, char c) const noexcept {
 
 mpf_class Calculator::evaluate() {
   if (!stack.empty())
-    throw "stack is not clear";
+    throw std::runtime_error("Stack is not empty");
   if (values.empty())
     return 0;
   std::stack<mpf_class> tmp;
@@ -61,7 +62,7 @@ mpf_class Calculator::evaluate() {
       };
       if (i.length() == 1 && i != ",") {
         if (tmp.size() < 2)
-          throw "tmp is bad";
+          throw std::invalid_argument("not enough parameters for given operation");
         mpf_class x, y;
         y = popLast();
         x = popLast();
@@ -91,7 +92,7 @@ mpf_class Calculator::evaluate() {
         }
         case '2':
           if (tmp.size() < 2)
-            throw "not enough params";
+            throw std::invalid_argument("not enough parameters for given function");
           mpf_class x = popLast();
           tmp.push(functions2[i](popLast(), x));
           break;
@@ -100,7 +101,7 @@ mpf_class Calculator::evaluate() {
     }
   }
   if (tmp.size() > 2)
-    throw "tmp brok ";
+    throw std::invalid_argument("This shouldn't happen");
   this->ans = tmp.top();
   return this->ans;
 }
@@ -118,7 +119,7 @@ mpf_class Calculator::parse(const std::string &s) {
   values = {};
   lastType = NO;
   if (s.empty() || s == "\n")
-    return 0;
+    throw std::invalid_argument("parse string cannot be empty");
   std::string tmp;
   int base = 10;
   bool in_digit = 0;
@@ -337,8 +338,6 @@ const std::vector<std::string> Calculator::genVocab() const {
 
 const std::string Calculator::getSettings() const {
   std::string res;
-  res += '[';
   res += (m_settings & flags::DEGREES ? "deg" : "rad");
-  res += ']';
   return res;
 }
