@@ -50,7 +50,8 @@ enum outputFlags {
   RPN = 1 << 1,
   HEX = 1 << 2,
   OCT = 1 << 3,
-  DEC = 1 << 4
+  DEC = 1 << 4,
+  BIN = 1 << 5
 };
 int main(int argc, char *argv[]) {
   Calculator calculator;
@@ -71,8 +72,10 @@ int main(int argc, char *argv[]) {
         std::cout << calculator.updateMode(operation.substr(6, operation.length() - 1)) << '\n';
       } else if(operation.compare(0, 3, "out") == 0) {
         //modify output, like oct, hex, etc
-      std::cout << "ora\n";
         switch(tolower(operation[4])) {
+          case 'n':
+            out = 0;
+            break;
           case 'r':
             out ^= RPN;
             break;
@@ -85,11 +88,12 @@ int main(int argc, char *argv[]) {
           case 'd':
             out ^= DEC;
             break;
+          case 'b':
+            out ^= BIN;
           case 'f':
             out = -1; //set all bits
             break;
         }
-      std::cout << out << '\n';
       }
       prompt = '[' + calculator.getSettings() + ']' + suffix;
     } else if(input.compare(0, 3, "out") == 0) {

@@ -50,9 +50,11 @@ mpq_class Func::bernoulli(unsigned int n) {
   return res;
 }
 
+
 mpf_class Func::mpf_sin(mpf_class t, bool deg) {
-  if(deg) t = degToRad(t);
   t = reduceRad(t);
+  std::cout << t << '\n';
+  if(deg) t = degToRad(t);
   std::function<mpf_class(int n)> fn = [=](int n) {
     mpf_class numerator = pow(-1, n);
     mpz_class denominator = mpz_fac(2 * n + 1);
@@ -66,8 +68,8 @@ mpf_class Func::mpf_sin(mpf_class t, bool deg) {
 
 
 mpf_class Func::mpf_cos(mpf_class t, bool deg) {
-  if(deg) t = degToRad(t);
   t = reduceRad(t);
+  if(deg) t = degToRad(t);
   std::function<mpf_class(int n)> fn = [=](int n) {
     mpf_class numerator = pow(-1, n);
     mpf_class denominator = mpz_fac(2 * n);

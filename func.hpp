@@ -14,14 +14,18 @@ namespace Func {
   //accepts a function taking a template and an int representing the nth iteration
   mpf_class summation(std::function<mpf_class(int)> fn, int x = ACCURACY, int y = 0);
   inline mpf_class reduceRad(mpf_class t) {
-    while (t > pi) t -= 2*pi;
+    while (true) {
+      if (t > 2 * pi) t -= 2*pi;
+      else if (t < -2 * pi) t += 2*pi;
+      else break;
+    }
     return t;
   }
   inline mpf_class radToDeg(mpf_class t) noexcept {
-    return t * 180 / pi;
+    return t * (180 / pi);
   }
   inline mpf_class degToRad(mpf_class t) noexcept {
-    return t * pi / 180;
+    return t * (pi / 180);
   }
   mpz_class mpz_fac(unsigned long x);
   mpf_class pow(mpf_class t, long b);
